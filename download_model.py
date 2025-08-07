@@ -16,12 +16,33 @@ MODEL_ZIP_NAME = "final_moderation_model.zip"
 MODEL_DIR = "final_moderation_model"
 
 def download_from_google_drive(file_id, destination):
-    """구글 드라이브에서 대용량 파일 다운로드"""
+    """구글 드라이브에서 대용량 파일 다운로드 (바이러스 검사 우회 포함)"""
     
     def get_confirm_token(response):
         for key, value in response.cookies.items():
             if key.startswith('download_warning'):
                 return value
+        return None
+    
+    def get_confirm_code_from_html(response_text):
+        """HTML에서 confirm 코드 추출"""
+        import re
+        # Google Drive 경고 페이지에서 confirm 코드 찾기
+        match = re.search(r'confirm=([^&\s"]+)', response_text)
+        if match:
+            return match.group(1)
+        
+        # 다른 패턴들도 시도
+        patterns = [
+            r'"confirm"\s*:\s*"([^"]+)"',
+            r'&amp;confirm=([^&\s"]+)',
+            r'&confirm=([^&\s"]+)'
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, response_text)
+            if match:
+                return match.group(1)
         return None
 
     def save_response_content(response, destination):
@@ -37,20 +58,76 @@ def download_from_google_drive(file_id, destination):
                             pbar.update(len(chunk))
             else:
                 print("파일 크기를 알 수 없어 진행률 표시 없이 다운로드합니다...")
+                downloaded = 0
                 for chunk in response.iter_content(CHUNK_SIZE):
                     if chunk:
                         f.write(chunk)
+                        downloaded += len(chunk)
+                        print(f"다운로드됨: {downloaded // (1024*1024)}MB", end='\r')
 
     URL = "https://docs.google.com/uc?export=download"
     
     session = requests.Session()
+    
+    print("📥 초기 요청 중...")
     response = session.get(URL, params={'id': file_id}, stream=True)
+    
+    # 쿠키에서 토큰 확인
     token = get_confirm_token(response)
-
-    if token:
+    
+    # HTML 응답인 경우 (바이러스 검사 경고)
+    if not token and 'text/html' in response.headers.get('content-type', ''):
+        print("⚠️ 바이러스 검사 경고 감지됨. 우회 시도 중...")
+        response_text = response.text
+        
+        # HTML에서 confirm 코드 추출
+        confirm_code = get_confirm_code_from_html(response_text)
+        
+        if confirm_code:
+            print(f"✅ Confirm 코드 발견: {confirm_code[:10]}...")
+            params = {'id': file_id, 'confirm': confirm_code}
+            response = session.get(URL, params=params, stream=True)
+        else:
+            # 다른 방법들 시도
+            print("🔄 대안 방법 시도 중...")
+            alternative_urls = [
+                f"https://drive.google.com/uc?export=download&id={file_id}&confirm=t",
+                f"https://drive.google.com/uc?export=download&id={file_id}&confirm=1",
+                f"https://drive.google.com/u/0/uc?id={file_id}&export=download&confirm=t"
+            ]
+            
+            for alt_url in alternative_urls:
+                print(f"   시도: {alt_url[:60]}...")
+                response = session.get(alt_url, stream=True)
+                
+                # ZIP 파일인지 확인
+                content_type = response.headers.get('content-type', '')
+                if 'application' in content_type or 'binary' in content_type:
+                    print("   ✅ 바이너리 파일 응답 확인됨")
+                    break
+                elif response.status_code == 200:
+                    # 응답 크기가 큰 경우 (실제 파일일 가능성)
+                    content_length = response.headers.get('content-length')
+                    if content_length and int(content_length) > 1000000:  # 1MB 이상
+                        print(f"   ✅ 큰 파일 응답 확인됨 ({content_length} bytes)")
+                        break
+                        
+                print(f"   ❌ HTML 응답, 다음 시도...")
+    
+    elif token:
+        print(f"✅ 토큰 확인됨: {token[:10]}...")
         params = {'id': file_id, 'confirm': token}
         response = session.get(URL, params=params, stream=True)
 
+    # 최종 응답 확인
+    content_type = response.headers.get('content-type', '')
+    if 'text/html' in content_type:
+        print("❌ 여전히 HTML 응답을 받고 있습니다.")
+        print("   수동 다운로드를 시도해주세요:")
+        print(f"   https://drive.google.com/file/d/{file_id}/view?usp=sharing")
+        raise Exception("자동 다운로드 실패: 바이러스 검사 우회 불가")
+    
+    print("📦 파일 다운로드 시작...")
     save_response_content(response, destination)
 
 def extract_model():
