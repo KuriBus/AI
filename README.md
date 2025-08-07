@@ -146,6 +146,9 @@ python download_model.py
 
 # 서버 실행 (백그라운드)
 nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+
+# 그냥 실행
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 4. **서비스 등록** (자동 시작):
