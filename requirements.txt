@@ -13,3 +13,5 @@ python-multipart
 psutil
 requests
 python-dotenv
+accelerate
+safetensors>=0.4.0
