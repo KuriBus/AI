@@ -25,10 +25,12 @@ pip install -r requirements.txt
 
 ### 3. 모델 다운로드
 ```bash
-# Google Drive에서 자동 다운로드
-python download_model.py
+# gdown 설치 (Google Drive 전용 다운로더)
+pip install gdown
+
+# gdown으로 다운로드
+gdown "{구글 드라이브의 공유 링크 id}" -O final_moderation_model.zip
 ```
-> ⚠️ 첫 실행 시 `download_model.py` 파일에서 Google Drive 파일 ID를 설정해주세요.
 
 ### 4. HyperCLOVA X API 키 설정 (필수)
 ```bash
