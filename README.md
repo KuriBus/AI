@@ -1,82 +1,68 @@
-# 🤖 AI 채팅 순화 모델 API
+# 🤖 AI 텍스트 모더레이션 API
 
-## 📦 설치 및 실행
+한국어 텍스트의 악의성을 탐지하고 욕설/비속어를 자동으로 순화해주는 FastAPI 서버입니다.
 
-### 1. 저장소 복사
+## ✨ 주요 기능
+
+- **악의성 탐지**: 파인튜닝된 AI 모델로 텍스트 악의성 점수 계산 (0.0-1.0)
+- **자동 순화**: HyperCLOVA X API를 활용한 지능형 텍스트 순화
+- **RESTful API**: FastAPI 기반의 간단한 HTTP API
+- **헬스체크**: 서버 상태 모니터링 엔드포인트
+
+## 🚀 빠른 시작
+
+### 1. 저장소 클론
 ```bash
 git clone <your-repo-url>
-cd AI
+cd <repo-name>
 ```
 
-### 2. Google Drive 모델 설정
-1. `final_moderation_model/pytorch_model-001.pth` 파일을 Google Drive에 업로드
-2. 파일 공유 설정: "링크가 있는 모든 사용자"
-3. 공유 링크에서 파일 ID 복사:
-   ```
-   https://drive.google.com/file/d/1a2b3c4d5e6f7g8h9i0j/view?usp=sharing
-                                ↑ 이 부분이 파일 ID
-   ```
-4. `download_model.py` 파일에서 파일 ID 수정:
-   ```python
-   "file_id": "1a2b3c4d5e6f7g8h9i0j",  # 실제 파일 ID로 교체
-   ```
+### 2. Python 환경 설정
+```bash
+# Python 3.11+ 권장
+pip install -r requirements.txt
+```
 
 ### 3. 모델 다운로드
 ```bash
-pip install requests tqdm
+# Google Drive에서 자동 다운로드
 python download_model.py
 ```
+> ⚠️ 첫 실행 시 `download_model.py` 파일에서 Google Drive 파일 ID를 설정해주세요.
 
-### 4. 서버 실행
-
-#### Windows (간편):
-- **시작**: `start.bat` 더블클릭
-- **중지**: `stop.bat` 더블클릭
-
-#### 3. HyperCLOVA X API 설정 (선택사항)
-⚠️ **신규 API 키 필요**: 구 버전 키는 작동하지 않습니다!
-
-📋 **새 API 키 발급**:
-1. [네이버 클라우드 콘솔](https://console.ncloud.com) → AI Services → CLOVA Studio
-2. 좌측 **API 키** → **[테스트]** 탭 → **[테스트 API 키 발급]**
-
-🔧 **환경 변수 설정**:
+### 4. HyperCLOVA X API 키 설정 (필수)
 ```bash
-# .env 파일 생성
-HYPERCLOVA_API_KEY=새_발급받은_키
+# 환경변수로 설정
+export HYPERCLOVA_API_KEY="your-api-key-here"
 
-# 또는 환경변수로
-set HYPERCLOVA_API_KEY=새_발급받은_키  # Windows
-export HYPERCLOVA_API_KEY=새_발급받은_키  # Linux/Mac
+# 또는 .env 파일 생성
+echo "HYPERCLOVA_API_KEY=your-api-key-here" > .env
 ```
 
-📖 **참고**: [공식 API 문서](https://api.ncloud-docs.com/docs/ai-naver-clovastudio-summary)
+#### API 키 발급 방법:
+1. [네이버 클라우드 콘솔](https://console.ncloud.com) 접속
+2. **AI Services** → **CLOVA Studio** → **API 키**
+3. **[테스트]** 탭에서 **테스트 API 키 발급**
 
-#### 수동 실행:
+### 5. 서버 실행
 ```bash
-# 패키지 설치
-pip install -r requirements.txt
-
-# 서버 시작
 uvicorn main:app --host 0.0.0.0 --port 8000
-
-# 또는 Docker 사용
-docker build -t moderation-api .
-docker run -p 8000:8000 moderation-api
 ```
 
-## 🔧 API 사용법
+서버가 시작되면 `http://localhost:8000`에서 API를 사용할 수 있습니다.
 
-### 텍스트 모더레이션 (메인 기능)
+## 📡 API 사용법
+
+### 텍스트 모더레이션
 ```bash
 curl -X POST "http://localhost:8000/moderate" \
   -H "Content-Type: application/json" \
-  -d '{"text": "테스트할 텍스트"}'
+  -d '{"text": "테스트할 텍스트를 입력하세요"}'
 ```
 
 **응답 예시:**
 
-**안전한 텍스트:**
+**일반 텍스트 (안전):**
 ```json
 {
   "text": "안녕하세요 좋은 하루입니다",
@@ -87,63 +73,172 @@ curl -X POST "http://localhost:8000/moderate" \
 }
 ```
 
-**유해한 텍스트 (AI 순화):**
+**유해 텍스트 (순화됨):**
 ```json
 {
-  "text": "시발 진짜 열받네",
-  "malice_score": 0.8567,
+  "text": "뭘 꼬라봐 좆같은놈아",
+  "malice_score": 0.9759,
   "is_harmful": true,
   "confidence": "매우 위험",
-  "purified_text": "정말 많이 화가 나네요"
+  "purified_text": "뭘 째려봐 안 좋은 놈아"
 }
 ```
 
-**순화 방식:**
-- **HyperCLOVA X API**: 자연스럽고 문맥 고려한 AI 순화 (권장)
-- **규칙 기반**: API 실패 시 백업 순화
-
-### 서버 상태 확인
+### 헬스체크
 ```bash
 curl http://localhost:8000/quick-health
 ```
 
-## 📁 파일 구조
-```
-AI/
-├── main.py                     # 메인 서버 파일
-├── download_model.py           # Google Drive 모델 다운로드
-├── requirements.txt            # 패키지 목록
-├── Dockerfile                  # Docker 설정
-├── start.bat / stop.bat        # Windows 실행/중지 스크립트
-├── test_api.py                 # API 테스트
-└── final_moderation_model/     # 모델 폴더 (다운로드됨)
-    └── pytorch_model-001.pth   # 모델 파일 (2.1GB)
+응답:
+```json
+{"status": "healthy"}
 ```
 
-## 🚀 AWS 배포
+## 🏗️ AWS 배포
+
+### EC2 직접 배포 (권장)
+
+1. **EC2 인스턴스 생성** (Ubuntu 22.04, t3.small 권장)
+2. **보안 그룹 설정**: SSH(22), HTTP(8000) 포트 오픈
+3. **서버 설정**:
+
 ```bash
-# EC2에서
+# SSH 접속 후
+sudo apt update && sudo apt upgrade -y
+
+# Python 3.11 설치
+sudo apt install -y software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt update
+sudo apt install -y python3.11 python3.11-pip python3.11-venv
+
+# 프로젝트 클론
 git clone <your-repo-url>
-cd AI
+cd <repo-name>
 
-# Google Drive 파일 ID 설정
-nano download_model.py
+# 가상환경 설정
+python3.11 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-# Docker로 배포
-docker build -t moderation-api .
-docker run -d -p 8000:8000 --restart unless-stopped moderation-api
+# 환경변수 설정
+export HYPERCLOVA_API_KEY="your-api-key"
+
+# 모델 다운로드
+python download_model.py
+
+# 서버 실행 (백그라운드)
+nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+```
+
+4. **서비스 등록** (자동 시작):
+```bash
+sudo tee /etc/systemd/system/moderation-api.service > /dev/null <<EOF
+[Unit]
+Description=Moderation API
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=$(pwd)
+Environment=PATH=$(pwd)/venv/bin
+Environment=HYPERCLOVA_API_KEY=your-api-key
+ExecStart=$(pwd)/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable moderation-api
+sudo systemctl start moderation-api
+```
+
+## 📁 프로젝트 구조
+
+```
+├── main.py                    # 메인 FastAPI 애플리케이션
+├── requirements.txt           # Python 패키지 의존성
+├── download_model.py          # Google Drive 모델 자동 다운로드
+├── README.md                  # 프로젝트 문서
+├── .gitignore                # Git 제외 파일 목록
+└── final_moderation_model/    # AI 모델 파일들 (자동 다운로드)
+    ├── pytorch_model-001.pth  # 파인튜닝된 모델 가중치
+    ├── tokenizer.json         # 토크나이저 설정
+    ├── tokenizer_config.json  # 토크나이저 구성
+    └── ...                    # 기타 모델 파일들
 ```
 
 ## 🔧 문제 해결
 
-**모델 다운로드 실패 시:**
-1. Google Drive 파일 ID 확인
-2. 파일 공유 권한 확인 ("링크가 있는 모든 사용자")
-3. 수동 다운로드: `python download_model.py`
+### 모델 다운로드 실패
+```bash
+# Google Drive 파일 ID 확인
+# download_model.py에서 MODEL_FILE_ID 수정 필요
 
-**서버 시작 실패 시:**
-1. 포트 8000이 사용 중인지 확인
-2. 모델 파일이 다운로드되었는지 확인
-3. 의존성 설치: `pip install -r requirements.txt`
+# 수동 다운로드
+python download_model.py
+```
 
-그게 다입니다! 🎯
+### API 키 인증 실패
+```bash
+# API 키 확인
+echo $HYPERCLOVA_API_KEY
+
+# 새 API 키 발급 (테스트 탭에서)
+# Bearer 토큰 방식으로 변경됨
+```
+
+### 서버 시작 실패
+```bash
+# 포트 사용 여부 확인
+lsof -i :8000
+
+# 의존성 재설치
+pip install -r requirements.txt
+
+# 로그 확인
+tail -f app.log
+```
+
+## 🔧 모니터링
+
+### 로그 확인
+```bash
+# 애플리케이션 로그
+tail -f app.log
+
+# 시스템 서비스 로그 (서비스 등록한 경우)
+sudo journalctl -u moderation-api -f
+```
+
+### 성능 모니터링
+```bash
+# 서버 리소스 확인
+htop
+
+# API 응답 시간 테스트
+time curl -X POST "http://localhost:8000/moderate" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "테스트"}'
+```
+
+## 📋 요구사항
+
+- **Python**: 3.11+
+- **메모리**: 최소 2GB (모델 로딩용)
+- **디스크**: 최소 3GB (모델 파일용)
+- **네트워크**: HyperCLOVA X API 접근 가능
+
+## 🔐 보안 고려사항
+
+- API 키를 환경변수로 안전하게 관리
+- HTTPS 사용 권장 (프로덕션 환경)
+- 방화벽으로 필요한 포트만 오픈
+- 정기적인 보안 업데이트
+
+---
+
+🎯 **완전 자동화된 텍스트 모더레이션 솔루션을 경험해보세요!**
