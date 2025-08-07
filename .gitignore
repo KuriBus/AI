@@ -1,1 +1,134 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model files (too large for GitHub)
+final_moderation_model/
+*.pth
+*.bin
+*.safetensors
+
+# Model downloads and archives
+*.zip
+*.tar.gz
+*.rar
+model_*.zip
+final_moderation_model.zip
+
+# Documentation and guides (배포에 불필요)
+deploy_aws.md
+HYPERCLOVA_SETUP.md
+API_KEY_ISSUE_SOLUTION.md
+FINAL_SOLUTION.md
+
+# Test files (배포에 불필요)
+test_*.py
+*_test.py
+tests/
+
+# Development files (배포에 불필요)
+.pytest_cache/
+coverage.xml
+.coverage
+htmlcov/
+
+# Logs and runtime files
+*.log
+logs/
+app.log
+nohup.out
+
+
+# Deployment files (로컬 개발용)
+start.bat
+stop.bat
+*.bat
+*.sh
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-*
+*.atom
+
+# OS specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.cert
+
+# Development database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Jupyter notebooks (개발용)
+*.ipynb
+.ipynb_checkpoints/
+
+# Data files (학습 데이터 등)
+data/
+datasets/
+*.csv
+*.json
+*.xml
+*.parquet
+
+# Environment and config files
+.env*
+config.local.*
+secrets.json
+
+# Build and distribution
+build/
+dist/
+*.egg-info/

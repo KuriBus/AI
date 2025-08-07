@@ -1,0 +1,15 @@
+# requirements.txt
+
+fastapi
+uvicorn[standard]
+gunicorn
+torch --index-url https://download.pytorch.org/whl/cu118
+transformers
+pydantic
+scikit-learn
+pandas
+numpy
+python-multipart
+psutil
+requests
+python-dotenv
