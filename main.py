@@ -17,7 +17,10 @@ class ChatModerationModel(nn.Module):
         super(ChatModerationModel, self).__init__()
         self.base_model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            trust_remote_code=True
+            trust_remote_code=True,
+            torch_dtype=torch.float16,  # 메모리 사용량 절반으로 감소
+            low_cpu_mem_usage=True,     # CPU 메모리 사용량 최적화
+            device_map="auto"           # 자동 디바이스 매핑
         )
         self.malice_head = nn.Sequential(
             nn.Linear(self.base_model.config.hidden_size, 512),
