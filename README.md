@@ -17,18 +17,35 @@ git clone <your-repo-url>
 cd <repo-name>
 ```
 
+### 2. 가상환경이 활성화되었는지 확인
+```bash
+# 현재 디렉토리 확인
+pwd
+# /home/ubuntu/AI 또는 /home/ubuntu/moderation-api 여야 함
+
+# 가상환경 활성화 (중요!)
+source venv/bin/activate
+
+# 프롬프트가 (venv) ubuntu@... 로 바뀌어야 함
+```
 ### 2. Python 환경 설정
 ```bash
 # Python 3.11+ 권장
+# requests와 tqdm 설치
+pip install requests tqdm
+
+# 또는 requirements.txt로 모든 패키지 설치
 pip install -r requirements.txt
 ```
 
 ### 3. 모델 다운로드
 ```bash
-# Google Drive에서 자동 다운로드
-python download_model.py
+# gdown 설치 (Google Drive 전용 다운로더)
+pip install gdown
+
+# gdown으로 다운로드
+gdown "{구글 드라이브의 공유 링크 id}" -O final_moderation_model.zip
 ```
-> ⚠️ 첫 실행 시 `download_model.py` 파일에서 Google Drive 파일 ID를 설정해주세요.
 
 ### 4. HyperCLOVA X API 키 설정 (필수)
 ```bash
@@ -129,6 +146,9 @@ python download_model.py
 
 # 서버 실행 (백그라운드)
 nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+
+# 그냥 실행
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 4. **서비스 등록** (자동 시작):
