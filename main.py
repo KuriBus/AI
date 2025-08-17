@@ -20,7 +20,7 @@ class ChatModerationModel(nn.Module):
             trust_remote_code=True,
             torch_dtype=torch.float16,  # 메모리 사용량 절반으로 감소
             low_cpu_mem_usage=True,     # CPU 메모리 사용량 최적화
-            device_map="auto"           # 자동 디바이스 매핑
+            use_safetensors=False       # safetensors 비활성화로 호환성 문제 해결
         )
         self.malice_head = nn.Sequential(
             nn.Linear(self.base_model.config.hidden_size, 512),
