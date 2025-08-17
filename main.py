@@ -20,7 +20,7 @@ class ChatModerationModel(nn.Module):
             trust_remote_code=True,
             torch_dtype=torch.float16,  # 메모리 사용량 절반으로 감소
             low_cpu_mem_usage=True,     # CPU 메모리 사용량 최적화
-            use_safetensors=False       # safetensors 비활성화로 호환성 문제 해결
+            device_map="auto"           # 자동 디바이스 매핑
         )
         self.malice_head = nn.Sequential(
             nn.Linear(self.base_model.config.hidden_size, 512),
@@ -31,7 +31,7 @@ class ChatModerationModel(nn.Module):
             nn.Dropout(0.2),
             nn.Linear(256, num_labels),
             nn.Sigmoid()
-        )
+        ).half()  # float16으로 변환
 
     def forward(self, input_ids, attention_mask, labels=None):
         outputs = self.base_model(
@@ -259,7 +259,7 @@ def purify_text_with_hyperclova_api(text: str) -> str:
                 if response.status_code == 200:
                     # 성공 시 응답 파싱
                     purified = parse_hyperclova_response(response.text)
-                    if purified and len(purified.strip()) > 2:
+                    if purified and len(purified.strip()) >= 1:
                         print(f"   ✅ 순화 성공: {text[:15]}... -> {purified[:15]}...")
                         return purified.strip()
                     else:
